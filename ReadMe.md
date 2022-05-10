@@ -1,18 +1,28 @@
-# ts-esm-babel-template
-Because I don't want to look up the preset-env arguments<br/>
-and guess for two hours until getting it right, again.
 
-## Function
-This repo is set up to use babel 7^<br/>
-to compile typescript to javascript esmodules<br/>
+# socketsnake
+A (wip) replacement of PDANet software
 
-Simply run:
-`npm run build` or `./build.sh`
+Aims to eventually provide compatibility with pdanet mobile and desktop software
+but definitely to replace the functionality of pdanet software.
 
-File copy is set up as well.
+# state
+Close to functional on linux, all the individual parts are functional, but needs assembling.
 
-`src/index.ts` -> `lib/index.js`<br/>
-`src/index.html` -> `lib/index.html`
+# why
+PDANet software does essentially the same job, but it is not open source, it is old, has very limited linux support (no tcp/udp for me =( ), and frankly the website looks kinda sketch.
 
-If you feel this template could be made better,<br/>
-submit a PR and I'll merge if its pretty + works :)
+The paid-version of PDANet is cheap, but when I went to purchase I saw bad reviews of the key not working, and decided I'd live with free version until I got the guts to reproduce a similar product to replace it.
+
+# how
+A [tuntap device](https://en.wikipedia.org/wiki/TUN/TAP) is created<br/>
+on the "request" mode computer (currently linux, windows support is planned)<br/>
+
+The traffic is forwarded to an "service" mode (currently android) mobile device<br />
+(currently over adb thru USB), which swaps the endpoint address, and sends to WAN
+
+# specifics
+- socketsnake uses [node.js](https://nodejs.org) runtime
+- tuntap device is created using [stdiotuntap](https://github.com/RepComm/stdiotuntap)
+- stdiotuntap uses [LaKabane/libtuntap](https://github.com/LaKabane/libtuntap)
+- [adb](https://developer.android.com/studio/command-line/adb) is used to connect to "service" android mobile device
+- `adb reverse tcp:10209 tcp:10209` is run on "request" desktop device
