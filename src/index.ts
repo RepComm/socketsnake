@@ -1,6 +1,7 @@
-import { createServer } from "http";
+import { createServer as createHttpServer } from "http";
 import { createSpinner } from "nanospinner";
-
+import { Bridge } from "./bridge.js";
+import { StdioTunTap } from "./stdiotuntap.js";
 
 export type ArgValue = string | Array<string> | boolean | number| Array<number>;
 
@@ -13,6 +14,7 @@ export interface KnownArgs extends Args {
   mode: "service" | "request";
   interface: "cli" | "web";
   webPort: number;
+  bridgePort: 10209;
 }
 
 function args(argv: string[]): Args {
@@ -22,7 +24,8 @@ function args(argv: string[]): Args {
     if (a.startsWith("-")) {
       let [cmd, pstr] = a.substring(1).split("=");
 
-      let params: ArgValue;
+      //@ts-ignore
+      let params: ArgValue = undefined;
       (params as any) = true;
 
       if (pstr !== undefined) {
@@ -90,7 +93,7 @@ function initWeb(opts: KnownArgs) {
     opts.webPort = 10208;
     info(`webPort was falsy, reset to default of ${opts.webPort}`);
   }
-  createServer((req, res)=>{
+  createHttpServer((req, res)=>{
 
     res.end("Hello World");
   }).listen(opts.webPort);
@@ -108,6 +111,24 @@ function init(opts: Args) {
     setTimeout(() => {
       spinner.stop();
     }, 500);
+
+    if (opts.mode == "request") {
+
+      let tuntap = new StdioTunTap();
+      tuntap.listen((msg)=>{
+        if (bridge) bridge.send(msg);
+      });
+
+      if (!opts.bridgePort) {
+        opts.bridgePort = 10209;
+        info(`bridgePort arg was falsey, reset to default of 10209`);
+      }
+
+      let bridge = new Bridge(opts.bridgePort as number);
+      bridge.listen((msg)=>{
+        tuntap.send(msg);
+      });
+    }
 
   }
 }
